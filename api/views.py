@@ -10,6 +10,11 @@ def calculator_subtraction(request):
 
     return HttpResponse(float(data[0]) - float(data[1]))
 
+def calculator_multiplication(request):
+    data = _get_data(request)
+
+    return HttpResponse(float(data[0]) * float(data[1]))
+
 def calculator_division(request):
     data = _get_data(request)
 
@@ -20,10 +25,7 @@ def calculator_division(request):
 
     return HttpResponse(result)
 
-def calculator_multiplication(request):
-    data = _get_data(request)
 
-    return HttpResponse(float(data[0]) * float(data[1]))
 
 def _get_data(request):
     first_params = request.GET['first_params']
