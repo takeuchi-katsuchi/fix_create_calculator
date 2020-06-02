@@ -1,20 +1,368 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="utf-8">
-        <title>calculator</title>
-        <link rel="stylesheet" href="css/styles.css">
-    </head>
-    <body>
-        <div>
-        <form>
-            <input type="text" id="textbox">
-        </form>
-        </div>
-        <div class="numbox" id="numbox"></div>
-        <div class="numbox" id="arithmetic">
-            <div class="box" id="equol">＝</div>
-        </div>
-        <script src="js/index.js"></script>
-    </body>
+<head>
+  <meta charset="utf-8" />
+  <title>sample</title>
+</head>
+<body>
+  <input type="text" id="result" value="" readonly>
+  <div>
+    <input type="button" value="1" onclick="edit(this)">
+    <input type="button" value="2" onclick="edit(this)">
+    <input type="button" value="3" onclick="edit(this)">
+    <input type="button" value="+" onclick="add_calculator()">
+  </div>
+  <div>
+    <input type="button" value="4" onclick="edit(this)">
+    <input type="button" value="5" onclick="edit(this)">
+    <input type="button" value="6" onclick="edit(this)">
+    <input type="button" value="-" onclick="subtraction_calculator(this)">
+  </div>
+  <div>
+    <input type="button" value="7" onclick="edit(this)">
+    <input type="button" value="8" onclick="edit(this)">
+    <input type="button" value="9" onclick="edit(this)">
+    <input type="button" value="/" onclick="division_calculator(this)">
+  </div>
+  <div>
+    <input type="button" value="0" onclick="edit(this)">
+    <input type="button" value="CE" onclick="clear_value(this)">
+    <input type="button" value="*" onclick="multiplication_calculator(this)">
+    <input type="button" value="=" onclick="display_save_value()">
+  </div>
+
+
+  <script language="javascript" type="text/javascript">
+    var save_value = 0;
+    <!-- 2桁以上の数値を入力対応 -->
+    var digit_number = 0;
+    <!-- 桁数をカウント(2桁以上の数値を入力対応) -->
+    var digit_count = 0;
+    <!-- 2桁以上の数値を入力出来るようにする(掛り算.割け算で使う)-->
+    var set_multiplication_division = 0;
+    <!-- 四則演算で使う数字を作成(2桁以上の数値を入力対応) -->
+    var elem_value =0;
+    <!-- 四則演算で使う数字を作成の際に使われる変数(2桁以上の数値を入力対応) -->
+    var this_value= 0;
+    <!-- 足し算、引き算、掛け算、割り算の状態表す-->
+    var status = 0;
+    <!-- 掛け算、割り算が続いた時を数える-->
+    var reverse_priority_count = 0;
+    <!-- 掛け算、割り算を優先的に使うために一つ前の数字を保存-->
+    var previous_value = 0;
+    <!-- 掛け算、割り算を優先的に使う際、その処理に関係がなく後で追加する値-->
+    var except_previous_value = 0;
+    <!-- 掛け算、割り算が続いた時に保存する処理 -->
+    var continue_multiplication = 0;
+
+    const result = document.getElementById('result');
+
+
+    <!-- 数字が押された時の処理-->
+    function edit(elem) {
+        switch (status) {
+            case 'plus':
+                <!-- 値を表示 -->
+                result.value += elem.value;
+                <!-- 値を保存 -->
+                console.log(previous_value)
+                elem_value = create_number(elem.value);
+                previous_value = elem_value;
+                console.log(elem_value);
+                <!-- 桁数追加 -->
+                digit_count += 1;
+                reverse_priority = false;
+                <!-- バックエンドで処理をする(4つのAPIversion)-->
+                fourCalculator('add', save_value, parseInt(elem_value)).then(function (result) {
+                    Assignment(result);
+                });
+                break;
+            case 'minus':
+                <!-- 値を表示 -->
+                result.value += elem.value;
+                elem_value = create_number(elem.value);
+                previous_value = elem_value;
+                console.log(elem_value);
+                <!-- 桁数追加 -->
+                digit_count += 1;
+                reverse_priority = false;
+                <!-- バックエンドで処理をする(4つのAPIversion)-->
+                fourCalculator('subtraction', save_value, parseInt(elem_value)).then(function (result) {
+                    Assignment(result);
+                });
+                break;
+            case 'multiplication':
+                <!-- 値を表示 -->
+                result.value += elem.value
+                elem_value = create_number(elem.value);
+                <!-- 桁数追加 -->
+                digit_count += 1;
+                console.log('aaa');
+                <!-- 2桁以上の処理 バックエンドで処理をする(4つのAPIversion)-->
+                if (reverse_priority_count >= 2) {
+                    if (digit_count >= 2) {
+                        fourCalculator('multiplication', continue_multiplication, parseInt(elem_value)).then(function (result) {
+                            Assignment(result);
+                        });
+                    } else {
+                        console.log('aaa');
+                        console.log(previous_value)
+                        set_multiplication_division = save_value;
+                        fourCalculator('multiplication', continue_multiplication, parseInt(elem_value)).then(function (result) {
+                            Assignment(result);
+                        });
+                    }
+                }else {
+                    if (digit_count >= 2) {
+                        console.log('aaa');
+                        fourCalculator('multiplication', previous_value, parseInt(elem_value)).then(function (result) {
+                            Assignment(result);
+                        });
+                    } else {
+                        console.log('aaa');
+                        console.log(previous_value);
+                        set_multiplication_division = save_value;
+                        fourCalculator('multiplication', previous_value, parseInt(elem_value)).then(function (result) {
+                            Assignment(result);
+                        });
+                    }
+                }
+                break;
+            case 'division':
+                <!-- 値を表示 -->
+                result.value += elem.value
+                elem_value = create_number(elem.value);
+                <!-- 桁数追加 -->
+                digit_count += 1;
+                <!-- 2桁以上の処理 バックエンドで処理をする(4つのAPIversion)-->
+                if (reverse_priority_count >= 2) {
+                    if (digit_count >= 2) {
+                        fourCalculator('division', continue_multiplication, parseInt(elem_value)).then(function (result) {
+                            Assignment(result);
+                        });
+                    } else {
+                        set_multiplication_division = save_value;
+                        fourCalculator('division', continue_multiplication, parseInt(elem_value)).then(function (result) {
+                            Assignment(result);
+                        });
+                    }
+                } else {
+                    if (digit_count >= 2) {
+                        fourCalculator('division', previous_value, parseInt(elem_value)).then(function (result) {
+                            Assignment(result);
+                        });
+                    } else {
+                        set_multiplication_division = save_value;
+                        fourCalculator('division', previous_value, parseInt(elem_value)).then(function (result) {
+                            Assignment(result);
+                        });
+                    }
+                }
+                break;
+            <!-- ステータス未定のときの処理-->
+            default:
+                save_value += elem.value;
+                previous_value += elem.value;
+                result.value += elem.value;
+        }
+    }
+
+
+　　<!-- 計算整理処理 -->
+    function Assignment(x){
+        switch (status){
+            case 'plus':
+                if (digit_count >= 2){
+                    save_value = x - digit_number;
+                    digit_number = parseInt(elem_value);
+                    except_previous_value = save_value - previous_value;
+                    console.log(save_value);
+                } else {
+                    console.log(x);
+                    save_value = x;
+                    console.log(save_value);
+                    console.log(previous_value);
+                    digit_number = parseInt(elem_value);
+                    except_previous_value = save_value - previous_value;
+                }
+                break;
+            case 'minus':
+                if (digit_count >= 2){
+                    save_value = x + digit_number;
+                    digit_number = parseInt(elem_value);
+                    console.log(previous_value)
+                    except_previous_value = save_value - previous_value;
+                    console.log(save_value);
+                } else {
+                    save_value = x;
+                    console.log(save_value);
+                    digit_number = parseInt(elem_value);
+                    console.log(previous_value);
+                    except_previous_value = previous_value - save_value;
+                    previous_value = - except_previous_value;
+                    except_previous_value = previous_value
+                    console.log(except_previous_value);
+                }
+                break;
+            case 'multiplication':
+                if (reverse_priority_count >= 2) {
+                    if (digit_count >= 2) {
+                        save_value = x + except_previous_value;
+                        continue_multiplication = x;
+                        digit_number = parseInt(elem_value);
+                        console.log(save_value);
+                    } else {
+                        console.log(x);
+                        continue_multiplication = x;
+                        save_value = x + except_previous_value;
+                        console.log(save_value);
+                        digit_number = parseInt(elem_value);
+                    }
+                } else {
+                    if (digit_count >= 2) {
+                        continue_multiplication = x;
+                        save_value = x + except_previous_value;
+                        digit_number = parseInt(elem_value);
+                        console.log(save_value);
+                    } else {
+                        console.log(x);
+                        continue_multiplication = x;
+                        console.log(except_previous_value);
+                        save_value = x + except_previous_value;
+                        console.log(save_value);
+                        console.log(except_previous_value);
+                        digit_number = parseInt(elem_value);
+                    }
+                }
+                break;
+            case 'division':
+                if (reverse_priority_count >= 2) {
+                    if (digit_count >= 2) {
+                        save_value = x + except_previous_value;
+                        continue_multiplication = x;
+                        digit_number = parseInt(elem_value);
+                        console.log(save_value);
+                    } else {
+                        console.log(x);
+                        continue_multiplication = x;
+                        save_value = x + except_previous_value;
+                        console.log(save_value);
+                        digit_number = parseInt(elem_value);
+                    }
+                } else {
+                    if (digit_count >= 2) {
+                        continue_multiplication = x;
+                        save_value = x + except_previous_value;
+                        digit_number = parseInt(elem_value);
+                        console.log(save_value);
+                    } else {
+                        console.log(x);
+                        continue_multiplication = x;
+                        console.log(except_previous_value);
+                        save_value = x + except_previous_value;
+                        console.log(save_value);
+                        console.log(except_previous_value);
+                        digit_number = parseInt(elem_value);
+                    }
+                }
+                break;
+                break;
+            default:
+               break;
+        }
+    }
+
+
+    <!-- 数字を作成 -->
+    function create_number(elem) {
+        this_value += elem;
+        return parseInt(this_value);
+    }
+
+　　<!-- "+" 押された時の処理 -->
+    function add_calculator() {
+        status = "plus";
+        result.value += '＋';
+        reverse_priority_count = 0;
+        continue_multiplication = 0;
+        setValue();
+    }
+
+    <!-- "-" 押された時の処理 -->
+    function subtraction_calculator() {
+        status = "minus";
+        result.value += 'ー';
+        reverse_priority_count = 0;
+        continue_multiplication = 0;
+        setValue();
+    }
+
+    <!-- "*" 押された時の処理 -->
+    function multiplication_calculator(){
+        status = "multiplication";
+        result.value += '＊';
+        reverse_priority_count += 1;
+        setValue();
+    }
+
+    <!-- "/" 押された時の処理 -->
+    function division_calculator(){
+        status = "division";
+        result.value += '/';
+        reverse_priority_count += 1;
+        setValue();
+    }
+
+    <!-- "=" 押された時の処理 -->
+    function display_save_value() {
+        result.value = save_value;
+        status = 0;
+        reverse_priority_count = 0;
+        continue_multiplication = 0;
+        setValue();
+    }
+
+    <!-- "CE"を押した時,値リセットする処理 -->
+    function clear_value() {
+        result.value = 0;
+        status = 0;
+        save_value = 0;
+        elem_value =0;
+        reverse_priority = false;
+        reverse_priority_count = 0;
+        previous_value = 0;
+        except_previous_value = 0;
+        continue_multiplication = 0;
+        except_previous_value = 0;
+        setValue();
+    }
+
+    <!-- 値リセットする処理 -->
+    function setValue(){
+        digit_number = 0;
+        digit_count = 0;
+        this_value =0;
+        elem_value =0;
+        set_multiplication_division = 0;
+    }
+
+
+
+    <!-- 2桁以上の処理 バックエンドで処理をする(4つのAPIversion)-->
+    function fourCalculator(operations, x, y) {
+        return new Promise(function (resolve) {
+            var xhr = new XMLHttpRequest();
+            path = 'http://localhost:8000/api/' + operations + '?first_params=' + x + '&second_params=' + y;
+            xhr.open('GET',path, true);
+            xhr.responseType = 'json';
+            xhr.onload = function () {
+                var data = this.response;
+                resolve(data);
+            }
+            xhr.send();
+        });
+    };
+
+  </script>
+</body>
 </html>
