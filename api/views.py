@@ -1,29 +1,29 @@
 from django.http.response import HttpResponse
-# import HttpException
+import json
+
 
 def calculator_add(request):
     data = _get_data(request)
-    return HttpResponse(float(data[0]) + float(data[1]))
+    json_str = json.dumps(float(data[0]) + float(data[1]))
+    return HttpResponse(json_str)
 
 def calculator_subtraction(request):
     data = _get_data(request)
-
-    return HttpResponse(float(data[0]) - float(data[1]))
+    json_str = json.dumps(float(data[0]) - float(data[1]))
+    return HttpResponse(json_str)
 
 def calculator_multiplication(request):
     data = _get_data(request)
-
-    return HttpResponse(float(data[0]) * float(data[1]))
+    json_str = json.dumps(float(data[0]) * float(data[1]))
+    return HttpResponse(json_str)
 
 def calculator_division(request):
     data = _get_data(request)
-
     try:
         result = float(data[0]) / float(data[1])
     except ZeroDivisionError as e:
         return e
-
-    return HttpResponse(result)
+    return HttpResponse(json.dumps(result))
 
 
 

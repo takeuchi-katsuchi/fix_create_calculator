@@ -35,325 +35,254 @@
   <script language="javascript" type="text/javascript">
     var save_value = 0;
     <!-- 2桁以上の数値を入力対応 -->
-    var digit_number = 0;
-    <!-- 桁数をカウント(2桁以上の数値を入力対応) -->
-    var digit_count = 0;
+    var digit_value = 0;
+    <!-- 桁数をカウント(2桁以上の数値を入力対応) この値が3な2以上になると計算が変わる-->
+    var count_digit = 0;
     <!-- 2桁以上の数値を入力出来るようにする(掛り算.割け算で使う)-->
-    var set_multiplication_division = 0;
+    var save_total_previous = 0;
     <!-- 四則演算で使う数字を作成(2桁以上の数値を入力対応) -->
-    var elem_value =0;
-    <!-- 四則演算で使う数字を作成の際に使われる変数(2桁以上の数値を入力対応) -->
-    var this_value= 0;
+    var used_arithmethic_calculation_value = 0;
+    <!-- 2桁以上の数値を作成する時に使われる変数 -->
+    var create_digit_value= 0;
     <!-- 足し算、引き算、掛け算、割り算の状態表す-->
-    var status = 0;
-    <!-- 掛け算、割り算が続いた時を数える-->
-    var reverse_priority_count = 0;
+    var arithmeric_status = ['plus', 'minus', 'multiplication', 'division', 'undefined'];
+    <!-- 掛け算、割り算が続いた時を数える この値が2以上になると処理が変わる-->
+    var continuous_multiplication_and_division = 0;
     <!-- 掛け算、割り算を優先的に使うために一つ前の数字を保存-->
-    var previous_value = 0;
+    var save_total_previous_value = 0;
     <!-- 掛け算、割り算を優先的に使う際、その処理に関係がなく後で追加する値-->
-    var except_previous_value = 0;
+    var except_save_total_previous_value = 0;
     <!-- 掛け算、割り算が続いた時に保存する処理 -->
-    var continue_multiplication = 0;
+    var used_value_when_continue_multiplication_or_division = 0;
 
     const result = document.getElementById('result');
 
 
     <!-- 数字が押された時の処理-->
     function edit(elem) {
-        switch (status) {
+        switch (arithmeric_status) {
             case 'plus':
                 <!-- 値を表示 -->
                 result.value += elem.value;
                 <!-- 値を保存 -->
-                console.log(previous_value)
-                elem_value = create_number(elem.value);
-                previous_value = elem_value;
-                console.log(elem_value);
+                used_arithmethic_calculation_value = create_number(elem.value);
+                save_total_previous_value = used_arithmethic_calculation_value;
                 <!-- 桁数追加 -->
-                digit_count += 1;
-                reverse_priority = false;
-                <!-- バックエンドで処理をする(4つのAPIversion)-->
-                fourCalculator('add', save_value, parseInt(elem_value)).then(function (result) {
+                count_digit += 1;
+                <!-- バックエンドで処理をする(4つの四則計算API)-->
+                fourApiCalculator('add', save_value, used_arithmethic_calculation_value).then(function (result) {
                     Assignment(result);
                 });
                 break;
             case 'minus':
                 <!-- 値を表示 -->
                 result.value += elem.value;
-                elem_value = create_number(elem.value);
-                previous_value = elem_value;
-                console.log(elem_value);
+                used_arithmethic_calculation_value = create_number(elem.value);
+                save_total_previous_value = used_arithmethic_calculation_value;
                 <!-- 桁数追加 -->
-                digit_count += 1;
-                reverse_priority = false;
-                <!-- バックエンドで処理をする(4つのAPIversion)-->
-                fourCalculator('subtraction', save_value, parseInt(elem_value)).then(function (result) {
+                count_digit += 1;
+                <!-- バックエンドで処理をする(1つのAPIversion)-->
+                oneApiCalculator('subtraction', save_value, used_arithmethic_calculation_value).then(function (result) {
                     Assignment(result);
                 });
                 break;
             case 'multiplication':
                 <!-- 値を表示 -->
                 result.value += elem.value
-                elem_value = create_number(elem.value);
+                used_arithmethic_calculation_value = create_number(elem.value);
                 <!-- 桁数追加 -->
-                digit_count += 1;
-                console.log('aaa');
-                <!-- 2桁以上の処理 バックエンドで処理をする(4つのAPIversion)-->
-                if (reverse_priority_count >= 2) {
-                    if (digit_count >= 2) {
-                        fourCalculator('multiplication', continue_multiplication, parseInt(elem_value)).then(function (result) {
-                            Assignment(result);
-                        });
-                    } else {
-                        console.log('aaa');
-                        console.log(previous_value)
-                        set_multiplication_division = save_value;
-                        fourCalculator('multiplication', continue_multiplication, parseInt(elem_value)).then(function (result) {
-                            Assignment(result);
-                        });
-                    }
-                }else {
-                    if (digit_count >= 2) {
-                        console.log('aaa');
-                        fourCalculator('multiplication', previous_value, parseInt(elem_value)).then(function (result) {
-                            Assignment(result);
-                        });
-                    } else {
-                        console.log('aaa');
-                        console.log(previous_value);
-                        set_multiplication_division = save_value;
-                        fourCalculator('multiplication', previous_value, parseInt(elem_value)).then(function (result) {
-                            Assignment(result);
-                        });
-                    }
+                count_digit += 1;
+                if (count_digit < 2){
+                    save_total_previous = save_value;
+                }
+                <!-- 2桁以上の処理 バックエンドで処理をする(4つの四則計算API)-->
+                if (continuous_multiplication_and_division >= 2) {
+                    fourApiCalculator('multiplication', used_value_when_continue_multiplication_or_division, used_arithmethic_calculation_value).then(function (result) {
+                        Assignment(result);
+                    });
+                <!-- 2桁以上の処理 バックエンドで処理をする(1つのAPIversion)-->
+                } else {
+                    oneApiCalculator('multiplication', save_total_previous_value, used_arithmethic_calculation_value).then(function (result) {
+                        Assignment(result);
+                    });
                 }
                 break;
             case 'division':
                 <!-- 値を表示 -->
                 result.value += elem.value
-                elem_value = create_number(elem.value);
+                used_arithmethic_calculation_value = create_number(elem.value);
                 <!-- 桁数追加 -->
-                digit_count += 1;
+                count_digit += 1;
+                if (count_digit < 2){
+                    save_total_previous = save_value;
+                }
                 <!-- 2桁以上の処理 バックエンドで処理をする(4つのAPIversion)-->
-                if (reverse_priority_count >= 2) {
-                    if (digit_count >= 2) {
-                        fourCalculator('division', continue_multiplication, parseInt(elem_value)).then(function (result) {
-                            Assignment(result);
-                        });
-                    } else {
-                        set_multiplication_division = save_value;
-                        fourCalculator('division', continue_multiplication, parseInt(elem_value)).then(function (result) {
-                            Assignment(result);
-                        });
-                    }
+                if (continuous_multiplication_and_division >= 2) {
+                    fourApiCalculator('division', used_value_when_continue_multiplication_or_division, used_arithmethic_calculation_value).then(function (result) {
+                        Assignment(result);
+                    });
+                <!-- 2桁以上の処理 バックエンドで処理をする(1つのAPIversion)-->
                 } else {
-                    if (digit_count >= 2) {
-                        fourCalculator('division', previous_value, parseInt(elem_value)).then(function (result) {
-                            Assignment(result);
-                        });
-                    } else {
-                        set_multiplication_division = save_value;
-                        fourCalculator('division', previous_value, parseInt(elem_value)).then(function (result) {
-                            Assignment(result);
-                        });
-                    }
+                    oneApiCalculator('division', save_total_previous_value, used_arithmethic_calculation_value).then(function (result) {
+                        Assignment(result);
+                    });
                 }
                 break;
             <!-- ステータス未定のときの処理-->
             default:
                 save_value += elem.value;
-                previous_value += elem.value;
+                save_total_previous_value += elem.value;
                 result.value += elem.value;
         }
     }
 
-
 　　<!-- 計算整理処理 -->
     function Assignment(x){
-        switch (status){
+        switch (arithmeric_status){
             case 'plus':
-                if (digit_count >= 2){
-                    save_value = x - digit_number;
-                    digit_number = parseInt(elem_value);
-                    except_previous_value = save_value - previous_value;
-                    console.log(save_value);
+                if (count_digit >= 2){
+                    save_value = x - digit_value;
+                    digit_value = used_arithmethic_calculation_value;
+                    except_save_total_previous_value = save_value - save_total_previous_value;
                 } else {
-                    console.log(x);
                     save_value = x;
-                    console.log(save_value);
-                    console.log(previous_value);
-                    digit_number = parseInt(elem_value);
-                    except_previous_value = save_value - previous_value;
+                    digit_value = used_arithmethic_calculation_value;
+                    except_save_total_previous_value = save_value - save_total_previous_value;
                 }
                 break;
             case 'minus':
-                if (digit_count >= 2){
-                    save_value = x + digit_number;
-                    digit_number = parseInt(elem_value);
-                    console.log(previous_value)
-                    except_previous_value = save_value - previous_value;
-                    console.log(save_value);
+                if (count_digit >= 2){
+                    save_value = x + digit_value;
+                    digit_value = used_arithmethic_calculation_value;
+                    except_save_total_previous_value = save_value - save_total_previous_value;
                 } else {
                     save_value = x;
-                    console.log(save_value);
-                    digit_number = parseInt(elem_value);
-                    console.log(previous_value);
-                    except_previous_value = previous_value - save_value;
-                    previous_value = - except_previous_value;
-                    except_previous_value = previous_value
-                    console.log(except_previous_value);
+                    digit_value = used_arithmethic_calculation_value;
+                    except_save_total_previous_value = save_total_previous_value - save_value;
+                    save_total_previous_value = - except_save_total_previous_value;
+                    except_save_total_previous_value = save_total_previous_value
                 }
                 break;
             case 'multiplication':
-                if (reverse_priority_count >= 2) {
-                    if (digit_count >= 2) {
-                        save_value = x + except_previous_value;
-                        continue_multiplication = x;
-                        digit_number = parseInt(elem_value);
-                        console.log(save_value);
-                    } else {
-                        console.log(x);
-                        continue_multiplication = x;
-                        save_value = x + except_previous_value;
-                        console.log(save_value);
-                        digit_number = parseInt(elem_value);
-                    }
+                if (continuous_multiplication_and_division >= 2) {
+                    save_value = x + except_save_total_previous_value;
+                    used_value_when_continue_multiplication_or_division = x;
+                    digit_value = used_arithmethic_calculation_value;
                 } else {
-                    if (digit_count >= 2) {
-                        continue_multiplication = x;
-                        save_value = x + except_previous_value;
-                        digit_number = parseInt(elem_value);
-                        console.log(save_value);
-                    } else {
-                        console.log(x);
-                        continue_multiplication = x;
-                        console.log(except_previous_value);
-                        save_value = x + except_previous_value;
-                        console.log(save_value);
-                        console.log(except_previous_value);
-                        digit_number = parseInt(elem_value);
-                    }
+                    used_value_when_continue_multiplication_or_division = x;
+                    save_value = x + except_save_total_previous_value;
+                    digit_value = used_arithmethic_calculation_value;
                 }
                 break;
             case 'division':
-                if (reverse_priority_count >= 2) {
-                    if (digit_count >= 2) {
-                        save_value = x + except_previous_value;
-                        continue_multiplication = x;
-                        digit_number = parseInt(elem_value);
-                        console.log(save_value);
-                    } else {
-                        console.log(x);
-                        continue_multiplication = x;
-                        save_value = x + except_previous_value;
-                        console.log(save_value);
-                        digit_number = parseInt(elem_value);
-                    }
+                if (continuous_multiplication_and_division >= 2) {
+                    used_value_when_continue_multiplication_or_division = x;
+                    save_value = x + except_save_total_previous_value;
+                    digit_value = used_arithmethic_calculation_value;
                 } else {
-                    if (digit_count >= 2) {
-                        continue_multiplication = x;
-                        save_value = x + except_previous_value;
-                        digit_number = parseInt(elem_value);
-                        console.log(save_value);
-                    } else {
-                        console.log(x);
-                        continue_multiplication = x;
-                        console.log(except_previous_value);
-                        save_value = x + except_previous_value;
-                        console.log(save_value);
-                        console.log(except_previous_value);
-                        digit_number = parseInt(elem_value);
-                    }
+                    used_value_when_continue_multiplication_or_division = x;
+                    save_value = x + except_save_total_previous_value;
+                    digit_value = used_arithmethic_calculation_value;
                 }
-                break;
                 break;
             default:
                break;
         }
     }
 
-
     <!-- 数字を作成 -->
     function create_number(elem) {
-        this_value += elem;
-        return parseInt(this_value);
+        create_digit_value += elem;
+        return parseInt(create_digit_value);
     }
 
 　　<!-- "+" 押された時の処理 -->
     function add_calculator() {
-        status = "plus";
+        arithmeric_status = "plus";
         result.value += '＋';
-        reverse_priority_count = 0;
-        continue_multiplication = 0;
+        continuous_multiplication_and_division = 0;
+        used_value_when_continue_multiplication_or_division = 0;
         setValue();
     }
 
     <!-- "-" 押された時の処理 -->
     function subtraction_calculator() {
-        status = "minus";
+        arithmeric_status = "minus";
         result.value += 'ー';
-        reverse_priority_count = 0;
-        continue_multiplication = 0;
+        continuous_multiplication_and_division = 0;
+        used_value_when_continue_multiplication_or_division = 0;
         setValue();
     }
 
     <!-- "*" 押された時の処理 -->
     function multiplication_calculator(){
-        status = "multiplication";
+        arithmeric_status = "multiplication";
         result.value += '＊';
-        reverse_priority_count += 1;
+        continuous_multiplication_and_division += 1;
         setValue();
     }
 
     <!-- "/" 押された時の処理 -->
     function division_calculator(){
-        status = "division";
+        arithmeric_status = "division";
         result.value += '/';
-        reverse_priority_count += 1;
+        continuous_multiplication_and_division += 1;
         setValue();
     }
 
     <!-- "=" 押された時の処理 -->
     function display_save_value() {
         result.value = save_value;
-        status = 0;
-        reverse_priority_count = 0;
-        continue_multiplication = 0;
+        arithmeric_status = 'undefined';
+        continuous_multiplication_and_division = 0;
+        used_value_when_continue_multiplication_or_division = 0;
         setValue();
     }
 
     <!-- "CE"を押した時,値リセットする処理 -->
     function clear_value() {
-        result.value = 0;
-        status = 0;
+        result.value = '';
+        arithmeric_status = 'undefined';
         save_value = 0;
-        elem_value =0;
-        reverse_priority = false;
-        reverse_priority_count = 0;
-        previous_value = 0;
-        except_previous_value = 0;
-        continue_multiplication = 0;
-        except_previous_value = 0;
+        used_arithmethic_calculation_value =0;
+        continuous_multiplication_and_division = 0;
+        save_total_previous_value = 0;
+        except_save_total_previous_value = 0;
+        used_value_when_continue_multiplication_or_division = 0;
         setValue();
     }
 
     <!-- 値リセットする処理 -->
     function setValue(){
-        digit_number = 0;
-        digit_count = 0;
-        this_value =0;
-        elem_value =0;
-        set_multiplication_division = 0;
+        digit_value = 0;
+        count_digit = 0;
+        create_digit_value =0;
+        used_arithmethic_calculation_value =0;
+        save_total_previous = 0;
     }
 
 
-
-    <!-- 2桁以上の処理 バックエンドで処理をする(4つのAPIversion)-->
-    function fourCalculator(operations, x, y) {
+    <!-- 4つの四則計算API-->
+    function fourApiCalculator(operations, x, y) {
         return new Promise(function (resolve) {
             var xhr = new XMLHttpRequest();
             path = 'http://localhost:8000/api/' + operations + '?first_params=' + x + '&second_params=' + y;
             xhr.open('GET',path, true);
+            xhr.responseType = 'json';
+            xhr.onload = function () {
+                var data = this.response;
+                resolve(data);
+            }
+            xhr.send();
+        });
+    };
+
+    //１つにまとめたAPI
+    function oneApiCalculator(operations,x, y) {
+        return new Promise(function (resolve) {
+            var xhr = new XMLHttpRequest();
+            path = 'http://localhost:8000/oneapi?first_params=' + x + '&second_params=' + y + '&operator=' + operations;
+            xhr.open('GET', path, true);
             xhr.responseType = 'json';
             xhr.onload = function () {
                 var data = this.response;
