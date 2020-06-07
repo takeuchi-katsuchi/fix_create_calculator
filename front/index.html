@@ -70,12 +70,10 @@
                 used_arithmethic_calculation_value = create_number(elem.value);
 
                 save_total_previous_value = used_arithmethic_calculation_value;
-                console.log(save_total_previous_value)
                 <!-- 桁数追加 -->
                 count_digit += 1;
                 <!-- バックエンドで処理をする(4つの四則計算API)-->
                 fourApiCalculator('add', save_value, used_arithmethic_calculation_value).then(function (result) {
-                    console.log(result);
                     Assignment(result);
                 });
                 break;
@@ -153,7 +151,6 @@
                     except_save_total_previous_value = save_value - save_total_previous_value;
                 } else {
                     return_value = x['data'];
-                    console.log(return_value)
                     save_value = x;
                     digit_value = used_arithmethic_calculation_value;
                     except_save_total_previous_value = save_value - save_total_previous_value;
