@@ -8,22 +8,25 @@ def one_calculator(request):
     operator = request.GET['operator']
 
     if operator == "add":
-        json_str = json.dumps(float(first_params) + float(second_params))
-        return HttpResponse(json_str)
+        result = float(first_params) + float(second_params)
+        ret = {"data": result}
+        return HttpResponse(json.dumps(ret))
 
     if operator == "subtraction":
-        json_str = json.dumps(float(first_params) - float(second_params))
-        return HttpResponse(json_str)
+        result = float(first_params) - float(second_params)
+        ret = {"data": result}
+        return HttpResponse(json.dumps(ret))
 
     if operator == "multiplication":
-        json_str = json.dumps(float(first_params) * float(second_params))
-        return HttpResponse(json_str)
+        result = float(first_params) * float(second_params)
+        ret = {"data": result}
+        return HttpResponse(json.dumps(ret))
 
     if operator == "division":
         try:
             result = float(first_params) / float(second_params)
         except ZeroDivisionError as e:
             return e
-
-        return HttpResponse(json.dumps(result))
+        ret = {"data": result}
+        return HttpResponse(json.dumps(ret))
 

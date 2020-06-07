@@ -43,7 +43,7 @@
     <!-- 四則演算で使う数字を作成(2桁以上の数値を入力対応) -->
     var used_arithmethic_calculation_value = 0;
     <!-- 2桁以上の数値を作成する時に使われる変数 -->
-    var create_digit_value= 0;
+    var create_digit_value= '';
     <!-- 足し算、引き算、掛け算、割り算の状態表す-->
     var arithmeric_status = ['plus', 'minus', 'multiplication', 'division', 'undefined'];
     <!-- 掛け算、割り算が続いた時を数える この値が2以上になると処理が変わる-->
@@ -54,6 +54,8 @@
     var except_save_total_previous_value = 0;
     <!-- 掛け算、割り算が続いた時に保存する処理 -->
     var used_value_when_continue_multiplication_or_division = 0;
+    <!-- 記号押せるかどうかのステータス -->
+    var status = 'NG';
 
     const result = document.getElementById('result');
 
@@ -66,11 +68,14 @@
                 result.value += elem.value;
                 <!-- 値を保存 -->
                 used_arithmethic_calculation_value = create_number(elem.value);
+
                 save_total_previous_value = used_arithmethic_calculation_value;
+                console.log(save_total_previous_value)
                 <!-- 桁数追加 -->
                 count_digit += 1;
                 <!-- バックエンドで処理をする(4つの四則計算API)-->
                 fourApiCalculator('add', save_value, used_arithmethic_calculation_value).then(function (result) {
+                    console.log(result);
                     Assignment(result);
                 });
                 break;
@@ -78,6 +83,7 @@
                 <!-- 値を表示 -->
                 result.value += elem.value;
                 used_arithmethic_calculation_value = create_number(elem.value);
+
                 save_total_previous_value = used_arithmethic_calculation_value;
                 <!-- 桁数追加 -->
                 count_digit += 1;
@@ -133,6 +139,7 @@
                 save_value += elem.value;
                 save_total_previous_value += elem.value;
                 result.value += elem.value;
+                status = 'OK';
         }
     }
 
@@ -145,6 +152,8 @@
                     digit_value = used_arithmethic_calculation_value;
                     except_save_total_previous_value = save_value - save_total_previous_value;
                 } else {
+                    return_value = x['data'];
+                    console.log(return_value)
                     save_value = x;
                     digit_value = used_arithmethic_calculation_value;
                     except_save_total_previous_value = save_value - save_total_previous_value;
@@ -198,36 +207,52 @@
 
 　　<!-- "+" 押された時の処理 -->
     function add_calculator() {
-        arithmeric_status = "plus";
-        result.value += '＋';
-        continuous_multiplication_and_division = 0;
-        used_value_when_continue_multiplication_or_division = 0;
-        setValue();
+        if (status === 'NG') {
+            return;
+        } else {
+            arithmeric_status = "plus";
+            result.value += '＋';
+            continuous_multiplication_and_division = 0;
+            used_value_when_continue_multiplication_or_division = 0;
+            setValue();
+        }
     }
 
     <!-- "-" 押された時の処理 -->
     function subtraction_calculator() {
-        arithmeric_status = "minus";
-        result.value += 'ー';
-        continuous_multiplication_and_division = 0;
-        used_value_when_continue_multiplication_or_division = 0;
-        setValue();
+        if (status === 'NG') {
+            return;
+        } else {
+            arithmeric_status = "minus";
+            result.value += 'ー';
+            continuous_multiplication_and_division = 0;
+            used_value_when_continue_multiplication_or_division = 0;
+            setValue();
+        }
     }
 
     <!-- "*" 押された時の処理 -->
     function multiplication_calculator(){
-        arithmeric_status = "multiplication";
-        result.value += '＊';
-        continuous_multiplication_and_division += 1;
-        setValue();
+        if (status === 'NG') {
+            return;
+        } else {
+            arithmeric_status = "multiplication";
+            result.value += '＊';
+            continuous_multiplication_and_division += 1;
+            setValue();
+        }
     }
 
     <!-- "/" 押された時の処理 -->
     function division_calculator(){
-        arithmeric_status = "division";
-        result.value += '/';
-        continuous_multiplication_and_division += 1;
-        setValue();
+        if (status === 'NG') {
+            return;
+        } else {
+            arithmeric_status = "division";
+            result.value += '/';
+            continuous_multiplication_and_division += 1;
+            setValue();
+        }
     }
 
     <!-- "=" 押された時の処理 -->
@@ -236,6 +261,7 @@
         arithmeric_status = 'undefined';
         continuous_multiplication_and_division = 0;
         used_value_when_continue_multiplication_or_division = 0;
+        status = 'NG';
         setValue();
     }
 
@@ -249,6 +275,7 @@
         save_total_previous_value = 0;
         except_save_total_previous_value = 0;
         used_value_when_continue_multiplication_or_division = 0;
+        status = 'NG';
         setValue();
     }
 
@@ -256,7 +283,7 @@
     function setValue(){
         digit_value = 0;
         count_digit = 0;
-        create_digit_value =0;
+        create_digit_value ='';
         used_arithmethic_calculation_value =0;
         save_total_previous = 0;
     }
@@ -270,8 +297,8 @@
             xhr.open('GET',path, true);
             xhr.responseType = 'json';
             xhr.onload = function () {
-                var data = this.response;
-                resolve(data);
+                var result = this.response;
+                resolve(result.data);
             }
             xhr.send();
         });
@@ -285,8 +312,8 @@
             xhr.open('GET', path, true);
             xhr.responseType = 'json';
             xhr.onload = function () {
-                var data = this.response;
-                resolve(data);
+                var result = this.response;
+                resolve(result.data);
             }
             xhr.send();
         });
