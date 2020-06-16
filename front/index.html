@@ -25,7 +25,7 @@
     <input type="button" value="/" onclick="division_calculator(this)">
   </div>
   <div>
-    <input type="button" value="0" onclick="edit(this)">
+    <input type="button" value="0" id = "zero" onclick="edit(this)">
     <input type="button" value="CE" onclick="clear_value(this)">
     <input type="button" value="*" onclick="multiplication_calculator(this)">
     <input type="button" value="=" onclick="display_save_value()">
@@ -57,6 +57,8 @@
     <!-- 記号押せるかどうかのステータス -->
     var status = 'NG';
 
+    var zero_status = '';
+    var not_zero_status = '';
     const result = document.getElementById('result');
 
 
@@ -64,9 +66,6 @@
     function edit(elem) {
         switch (arithmeric_status) {
             case 'plus':
-                <!-- 値を表示 -->
-                result.value += elem.value;
-                <!-- 値を保存 -->
                 used_arithmethic_calculation_value = create_number(elem.value);
 
                 save_total_previous_value = used_arithmethic_calculation_value;
@@ -78,8 +77,6 @@
                 });
                 break;
             case 'minus':
-                <!-- 値を表示 -->
-                result.value += elem.value;
                 used_arithmethic_calculation_value = create_number(elem.value);
 
                 save_total_previous_value = used_arithmethic_calculation_value;
@@ -91,8 +88,6 @@
                 });
                 break;
             case 'multiplication':
-                <!-- 値を表示 -->
-                result.value += elem.value
                 used_arithmethic_calculation_value = create_number(elem.value);
                 <!-- 桁数追加 -->
                 count_digit += 1;
@@ -112,8 +107,6 @@
                 }
                 break;
             case 'division':
-                <!-- 値を表示 -->
-                result.value += elem.value
                 used_arithmethic_calculation_value = create_number(elem.value);
                 <!-- 桁数追加 -->
                 count_digit += 1;
@@ -134,9 +127,31 @@
                 break;
             <!-- ステータス未定のときの処理-->
             default:
+                if (elem.value === "0"){
+                    zero_status = "Zero";
+                }
+                if (zero_status === "Zero") {
+                    if (not_zero_status === '') {
+                        result.value += elem.value;
+                        not_zero_status = "not_zero";
+                        document.getElementById("zero").disabled = true;
+                    } else if (not_zero_status === "other") {
+                        result.value += elem.value;
+                    }
+                    else {
+                        not_zero_status = "other";
+                        zero_status = "";
+                        <!-- 0を削除するボタン -->
+                        delete_end_value = result.value.slice(0,-1)
+                        result.value = delete_end_value + elem.value;
+                        document.getElementById("zero").disabled = false;
+                    }
+                } else {
+                    result.value += elem.value;
+                    not_zero_status = "other";
+                }
                 save_value += elem.value;
                 save_total_previous_value += elem.value;
-                result.value += elem.value;
                 status = 'OK';
         }
     }
@@ -198,6 +213,28 @@
 
     <!-- 数字を作成 -->
     function create_number(elem) {
+        if (elem === "0"){
+            zero_status = "Zero";
+        }
+        if (zero_status === "Zero") {
+            if (not_zero_status === '') {
+                result.value += elem;
+                not_zero_status = "not_zero";
+                document.getElementById("zero").disabled = true;
+            } else if (not_zero_status === "other") {
+                result.value += elem;
+            } else {
+                not_zero_status = "other";
+                zero_status = "";
+                <!-- 0を削除するボタン -->
+                delete_end_value = result.value.slice(0,-1);
+                result.value = delete_end_value + elem;
+                document.getElementById("zero").disabled = false;
+            }
+        } else {
+            result.value += elem;
+            not_zero_status = "other";
+        }
         create_digit_value += elem;
         return parseInt(create_digit_value);
     }
@@ -283,6 +320,9 @@
         create_digit_value ='';
         used_arithmethic_calculation_value =0;
         save_total_previous = 0;
+        zero_status = '';
+        not_zero_status = '';
+        document.getElementById("zero").disabled = false;
     }
 
 
